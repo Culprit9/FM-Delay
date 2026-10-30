@@ -1,0 +1,5 @@
+#include "../Source/DelayEngine.h"
+#include <chrono>
+#include <iostream>
+#include <vector>
+int main(){double worst=0;for(int mode=0;mode<4;++mode)for(int size:{32,64,256,1024}){fm::DelayEngine e;e.prepare(96000);fm::Settings s;s.mode=mode;s.analog=1;s.diffusion=.7f;s.feedback=.8f;s.duck=.5f;s.timeMs=100;std::vector<float> l(size),r(size);double seconds=0;std::vector<double> ratios;for(int n=0;n<200;++n){for(int i=0;i<size;++i)l[i]=r[i]=.1f*std::sin((n*size+i)*.11);auto start=std::chrono::steady_clock::now();e.process(l.data(),r.data(),size,s);double elapsed=std::chrono::duration<double>(std::chrono::steady_clock::now()-start).count();seconds+=elapsed;ratios.push_back(elapsed/(size/96000.));}std::sort(ratios.begin(),ratios.end());double average=seconds/(200*size/96000.);worst=std::max(worst,average);std::cout<<"Mode="<<mode<<" block="<<size<<" at 96kHz: mean deadline use="<<100*average<<"%, p99="<<100*ratios[198]<<"%\n";}std::cout<<"Worst average processing/deadline="<<100*worst<<"% (isolated process; not a DAW-session CPU guarantee)\n";return worst<.5?0:1;}

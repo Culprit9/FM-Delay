@@ -1,0 +1,29 @@
+name: Windows x64 build and validation
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build, test, and package
+        shell: pwsh
+        run: ./scripts/build-windows.ps1 -RunWindowTest
+      - name: Upload Windows test package
+        uses: actions/upload-artifact@v4
+        with:
+          name: FM-Delay-Windows-x64
+          path: dist/FM-Delay-Windows-x64.zip
+          if-no-files-found: error
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-test-logs
+          path: build-windows-x64/Testing/Temporary/
+          if-no-files-found: ignore

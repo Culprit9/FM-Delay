@@ -1,0 +1,14 @@
+#include "../Source/Presets.h"
+#include <iostream>
+#include <stdexcept>
+#include <random>
+void require(bool v,const char* msg){if(!v)throw std::runtime_error(msg);}
+int main(){try{
+ float worst=0;double maxTailRatio=0;std::mt19937 random(81);std::uniform_real_distribution<float> noise(-1,1);
+ for(double rate:{44100.,48000.,96000.})for(float bpm:{60.f,120.f,180.f})for(size_t pi=0;pi<fm::presets.size();++pi){const auto& p=fm::presets[pi];require(p.sync,"every factory preset must load note sync");auto s=fm::presetSettings(p,bpm);require(s.feedback<=.7f&&s.hp<s.lp,"preset gain/bandwidth guardrails");require(s.timeMs>=1&&s.timeMs<=32000,"preset time in engine bounds");fm::DelayEngine e;e.prepare(rate);float l[256],r[256],dry[256];double firstTail=0,lastTail=0,wetEnergy=0;float peak=0;
+ double duration=std::max(8.,double(s.timeMs)*.003+3);int frames=int(rate*duration);for(int offset=0;offset<frames;offset+=256){int n=std::min(256,frames-offset);s.trigger=offset<rate*.7;for(int i=0;i<n;++i){float t=float(offset+i)/float(rate);float input=0;if(t<1.5f){float phase=std::fmod(t,.5f);float env=std::exp(-phase*18);input=.16f*(std::sin(t*6.2831853f*220)+.3f*std::sin(t*6.2831853f*1760))*env+.08f*noise(random)*std::exp(-phase*60);}l[i]=input;r[i]=input;dry[i]=input;}e.process(l,r,n,s);for(int i=0;i<n;++i){require(std::isfinite(l[i])&&std::isfinite(r[i]),"finite preset output");peak=std::max({peak,std::abs(l[i]),std::abs(r[i])});double wet=l[i]-dry[i]*(1-s.mix);wetEnergy+=wet*wet;double wetRight=r[i]-dry[i]*(1-s.mix);double wetSquared=wet*wet+wetRight*wetRight;if(offset>rate*(s.timeMs*.001)&&offset<rate*(s.timeMs*.001+2))firstTail+=wetSquared;if(offset>rate*(duration-2))lastTail+=wetSquared;}}
+ require(peak<.98f,"preset exceeds test signal headroom");require(wetEnergy>1e-6,"preset must produce repeats on test input");require(lastTail<firstTail*.9+1e-12,"preset tail should decay after input stops");worst=std::max(worst,peak);maxTailRatio=std::max(maxTailRatio,lastTail/(firstTail+1e-12));}
+ // Ping-pong must alternate for identical L/R input, with no first-repeat leak right.
+ {fm::DelayEngine e;e.prepare(48000);fm::Settings s;s.timeMs=100;s.mix=1;s.feedback=.5f;s.analog=s.duck=s.diffusion=0;s.mode=0;s.ping=true;s.hp=20;s.lp=20000;std::vector<float> l(20000),r(l.size());l[0]=r[0]=.5f;e.process(l.data(),r.data(),int(l.size()),s);auto peak=[&](const auto& a,int lo,int hi){float v=0;for(int i=lo;i<hi;++i)v=std::max(v,std::abs(a[i]));return v;};require(peak(l,4790,4850)>.1f&&peak(r,4790,4850)<1e-5,"ping first repeat left");require(peak(r,9590,9650)>.05f&&peak(l,9590,9650)<.01,"ping second repeat right");}
+ std::cout<<"PASS: 37 programs at 3 sample rates x 3 tempos; finite output, headroom, decaying tails; centered-input ping-pong. Peak="<<worst<<", worst late/early tail energy="<<maxTailRatio<<"\n";
+ }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

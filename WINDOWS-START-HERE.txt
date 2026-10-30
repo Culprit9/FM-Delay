@@ -1,0 +1,32 @@
+FM DELAY — Windows build kit (not a prebuilt Windows plugin)
+
+This source package must be built on Windows before it can be installed.
+No Windows binary has been produced or tested on the developer's Mac.
+
+1. On your Windows 10/11 x64 PC, install Visual Studio 2022 Community.
+   In its installer choose Desktop development with C++, including the
+   Windows SDK and C++ CMake tools. Install Git for Windows if needed.
+2. Extract this entire source folder to a writable location.
+3. Double-click Build FM DELAY.cmd. The first build downloads JUCE 8.0.6.
+   It builds the plugin, runs nine audio suites, and checks the actual
+   VST3's loading, audio, saved state, and 30 window-close cycles.
+4. A successful run creates dist/FM-Delay-Windows-x64.zip.
+5. Close your DAW before installing. Copy the whole FM DELAY.vst3 folder
+   into C:\Program Files\Common Files\VST3 (Windows may ask for permission).
+   Reopen the DAW and rescan VST3 plugins. The standalone EXE is optional.
+6. Test in an empty song first: audio, tempo sync, 100% wet on a return,
+   ping-pong, ducking, Throw latch, resizing, closing/reopening and saving.
+   Check all four characters. Do not assume every DAW is certified.
+
+You can instead open this source folder in Codex on the Windows PC and ask:
+"Build and validate FM DELAY for Windows x64 using scripts/build-windows.ps1
+-RunWindowTest. Fix Windows build issues, run all tests, and package the VST3.
+Do not modify existing DAW sessions."
+
+Supported target: Windows x64, VST3-compatible hosts. AU is Mac only.
+No AAX/Pro Tools version or native Windows ARM64 version is included.
+The Windows build is not Authenticode signed.
+
+Optional cloud build: .github/workflows/windows-build.yml is a manually
+triggered GitHub Actions workflow for a repository rooted at this source folder.
+It has been prepared locally, not uploaded or run.
