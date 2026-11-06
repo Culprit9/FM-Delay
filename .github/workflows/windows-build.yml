@@ -2,6 +2,7 @@ name: Windows x64 build and validation
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: read

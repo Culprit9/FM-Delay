@@ -41,8 +41,9 @@ public:
  const bool hpOpen=s.hp<=20.01f,lpOpen=s.lp>=19999;for(int c=0;c<2;++c){cleanHP[c].cutoff(sr,s.hp);cleanLP[c].cutoff(sr,s.lp);}
  if(!initialised){cleanHPWeight=hpOpen?0:1;cleanLPWeight=lpOpen?0:1;delay=nextDelay=target;timeFade=1;mix=s.mix;feedback=s.feedback;gate=(!s.bypass&&(!s.throwMode||s.trigger))?1:0;active=s.bypass?0:1;analog=s.analog;width=s.width;pingBlend=s.ping?1:0;lastPing=s.ping;diffusion=s.diffusion;duckAmount=s.duck;colourWeight=s.mode==0?0:1;userLow=lpTarget;userHigh=hpTarget;colourLow=toneTarget;drive=driveTarget;bias=biasTarget;blend=blendTarget;wowDepth=depthTarget;bodyAmount=bodyTarget;initialised=true;}
  if(s.ping!=lastPing){pingSeedRemaining=s.ping?int(std::max(delay,nextDelay)):0;seedFold={};lastPing=s.ping;}
- if(timeFade>=1&&std::abs(target-delay)>.01f){nextDelay=target;timeFade=0;}
- for(int i=0;i<frames;++i){cleanHPWeight=slew(cleanHPWeight,hpOpen?0:1,fast);cleanLPWeight=slew(cleanLPWeight,lpOpen?0:1,fast);if(std::abs(cleanHPWeight-(hpOpen?0:1))<.00005f)cleanHPWeight=hpOpen?0:1;if(std::abs(cleanLPWeight-(lpOpen?0:1))<.00005f)cleanLPWeight=lpOpen?0:1;float in[2]={finite(left[i],0),finite(right[i],0)},wet[2];
+
+ // Start queued fixed-tap transitions at a sample boundary, independent of host block size.
+ for(int i=0;i<frames;++i){if(timeFade>=1&&std::abs(target-delay)>.01f){nextDelay=target;timeFade=0;}cleanHPWeight=slew(cleanHPWeight,hpOpen?0:1,fast);cleanLPWeight=slew(cleanLPWeight,lpOpen?0:1,fast);if(std::abs(cleanHPWeight-(hpOpen?0:1))<.00005f)cleanHPWeight=hpOpen?0:1;if(std::abs(cleanLPWeight-(lpOpen?0:1))<.00005f)cleanLPWeight=lpOpen?0:1;float in[2]={finite(left[i],0),finite(right[i],0)},wet[2];
  pingBlend=slew(pingBlend,s.ping?1:0,fast);if(std::abs(pingBlend-(s.ping?1:0))<.00005f)pingBlend=s.ping?1:0;
  mix=slew(mix,s.mix,smooth);if(std::abs(mix-s.mix)<.00005f)mix=s.mix;feedback=slew(feedback,s.feedback,smooth);analog=slew(analog,s.analog,smooth);width=slew(width,s.width,smooth);diffusion=slew(diffusion,s.diffusion,smooth);duckAmount=slew(duckAmount,s.duck,smooth);colourWeight=slew(colourWeight,s.mode==0?0:1,smooth);if(std::abs(colourWeight-(s.mode==0?0:1))<.00005f)colourWeight=s.mode==0?0:1;
  gate=slew(gate,(!s.bypass&&(!s.throwMode||s.trigger))?1:0,fast);active=slew(active,s.bypass?0:1,fast);if(std::abs(active-(s.bypass?0:1))<.00005f)active=s.bypass?0:1;
