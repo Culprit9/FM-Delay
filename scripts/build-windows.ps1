@@ -40,7 +40,7 @@ $PackagedPlugin = Join-Path $PackagePath 'FM DELAY.vst3'
 if (Test-Path $PackagedPlugin) { Remove-Item -Recurse -Force $PackagedPlugin }
 Copy-Item -Recurse $PluginPath $PackagePath
 Copy-Item (Join-Path $BuildPath 'FMDelay_artefacts/Release/Standalone/FM DELAY.exe') $PackagePath
-foreach ($Document in @('README.md', 'PRESETS.md', 'QUALITY-AUDIT.md', 'COMPATIBILITY.md')) {
+foreach ($Document in @('README.md', 'PRESETS.md', 'QUALITY-AUDIT.md', 'COMPATIBILITY.md', 'COMMERCIAL-AUDIT.md', 'FREE-BUILD.md')) {
  Copy-Item (Join-Path $ProjectRoot $Document) $PackagePath
 }
 Compress-Archive -Path $PackagePath -DestinationPath (Join-Path $ProjectRoot 'dist/FM-Delay-Windows-x64.zip') -Force
